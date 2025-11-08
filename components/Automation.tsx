@@ -8,9 +8,13 @@ import { PlayIcon, TrashIcon, SmallShieldIcon, ShieldCheckIcon } from '../consta
 import Spinner from './common/Spinner';
 import Modal from './common/Modal';
 import useLocalStorage from '../hooks/useLocalStorage';
+import { useTranslation } from '../hooks/useTranslation';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Automation: React.FC = () => {
     const settingsCtx = useContext(SettingsContext);
+    const { t } = useTranslation();
+    const { language } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
     const [deletableItems, setDeletableItems] = useState<JellyfinItem[]>([]);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -28,18 +32,18 @@ const Automation: React.FC = () => {
 
     const handleScan = useCallback(async () => {
         if (!settingsCtx?.settings?.jellyfin) {
-            setError("Les paramètres Jellyfin ne sont pas configurés.");
+            setError(t('automationJellyfinNotConfigured'));
             return;
         }
         setIsLoading(true);
         setError(null);
         setDeletableItems([]);
         setSelectedItems(new Set());
-        addLog("Démarrage de l'analyse via Jellyfin...");
+        addLog(t('logScanStarted'));
 
         try {
             const allItems = await getItems(settingsCtx.settings.jellyfin, ['Movie', 'Season']);
-            addLog(`Trouvé ${allItems.length} films et saisons au total.`);
+            addLog(t('logScanFoundItems', { count: allItems.length }));
             const now = new Date();
 
             const itemsToFilter = allItems.filter(item => {
@@ -60,15 +64,15 @@ const Automation: React.FC = () => {
             
             setDeletableItems(itemsToFilter);
             setSelectedItems(new Set(itemsToFilter.map(item => item.Id))); // Select all by default
-            addLog(`Analyse terminée. ${itemsToFilter.length} éléments trouvés pour suppression via Radarr/Sonarr.`);
+            addLog(t('logScanComplete', { count: itemsToFilter.length }));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            setError(`Erreur lors de l'analyse : ${errorMessage}`);
-            addLog(`Erreur : ${errorMessage}`);
+            setError(t('logScanError', { error: errorMessage }));
+            addLog(t('logError', { error: errorMessage }));
         } finally {
             setIsLoading(false);
         }
-    }, [settingsCtx, exclusions, movieRetentionDays, tvSeasonRetentionDays]);
+    }, [settingsCtx, exclusions, movieRetentionDays, tvSeasonRetentionDays, t]);
 
     const handleToggleSelection = (itemId: string) => {
         setSelectedItems(prev => {
@@ -91,7 +95,7 @@ const Automation: React.FC = () => {
             newSet.delete(itemToExclude.Id);
             return newSet;
         });
-        addLog(`"${itemToExclude.Name}" a été ajouté à la liste d'exclusion.`);
+        addLog(t('logItemExcluded', { name: itemToExclude.Name }));
     };
 
     const handleExcludeAll = () => {
@@ -100,7 +104,7 @@ const Automation: React.FC = () => {
         const idsToExclude = deletableItems.map(item => item.Id);
         setExclusions(prev => [...new Set([...prev, ...idsToExclude])]);
         
-        addLog(`${idsToExclude.length} élément(s) ont été ajoutés à la liste d'exclusion.`);
+        addLog(t('logAllExcluded', { count: idsToExclude.length }));
 
         // Clear the current view
         setDeletableItems([]);
@@ -113,7 +117,7 @@ const Automation: React.FC = () => {
 
         setIsModalOpen(false);
         setIsLoading(true);
-        addLog(`Début de la suppression de ${selectedItems.size} élément(s)...`);
+        addLog(t('logDeletionStarted', { count: selectedItems.size }));
 
         const itemsToDelete = deletableItems.filter(item => selectedItems.has(item.Id));
         let successCount = 0;
@@ -130,30 +134,30 @@ const Automation: React.FC = () => {
             for (const item of itemsToDelete) {
                 if (item.Type === 'Movie') {
                     if (!radarr?.url || !radarr?.apiKey) {
-                        addLog(`ÉCHEC: "${item.Name}". Radarr n'est pas configuré.`);
+                        addLog(t('logDeletionFailedRadarr', { name: item.Name }));
                         continue;
                     }
                     if (!item.ProviderIds?.Tmdb) {
-                        addLog(`ÉCHEC: "${item.Name}". ID TMDB manquant dans Jellyfin.`);
+                        addLog(t('logDeletionFailedTmdb', { name: item.Name }));
                         continue;
                     }
 
                     const radarrMovie = radarrMovies.find(m => m.tmdbId === parseInt(item.ProviderIds!.Tmdb!));
                     if (radarrMovie) {
                         await deleteRadarrMovie(radarr, radarrMovie.id);
-                        addLog(`SUCCÈS: "${item.Name}" supprimé de Radarr.`);
+                        addLog(t('logDeletionSuccessRadarr', { name: item.Name }));
                         successCount++;
                     } else {
-                        addLog(`INFO: "${item.Name}" non trouvé dans Radarr.`);
+                        addLog(t('logDeletionInfoRadarr', { name: item.Name }));
                     }
                 } else if (item.Type === 'Season') {
                     if (!sonarr?.url || !sonarr?.apiKey) {
-                        addLog(`ÉCHEC: "${item.SeriesName} - ${item.Name}". Sonarr n'est pas configuré.`);
+                        addLog(t('logDeletionFailedSonarr', { seriesName: item.SeriesName, name: item.Name }));
                         continue;
                     }
                     const tvdbId = seriesIdToProviderIdMap.get(item.SeriesId!);
                     if (!tvdbId) {
-                        addLog(`ÉCHEC: "${item.SeriesName} - ${item.Name}". ID TVDB manquant pour la série parente.`);
+                        addLog(t('logDeletionFailedTvdb', { seriesName: item.SeriesName, name: item.Name }));
                         continue;
                     }
 
@@ -162,14 +166,14 @@ const Automation: React.FC = () => {
                         const episodes = await getSonarrEpisodes(sonarr, sonarrSerie.id);
                         const seasonNumberMatch = item.Name.match(/\d+/);
                         if (!seasonNumberMatch) {
-                            addLog(`ÉCHEC: Impossible de déterminer le numéro de saison pour "${item.Name}".`);
+                            addLog(t('logDeletionFailedSeasonNumber', { name: item.Name }));
                             continue;
                         }
                         const seasonNumber = parseInt(seasonNumberMatch[0]);
 
                         const episodesToDelete = episodes.filter(e => e.seasonNumber === seasonNumber && e.hasFile);
                         if (episodesToDelete.length === 0) {
-                            addLog(`INFO: Pas de fichiers à supprimer pour "${item.SeriesName} - ${item.Name}" dans Sonarr.`);
+                            addLog(t('logDeletionInfoSonarrFiles', { seriesName: item.SeriesName, name: item.Name }));
                             successCount++;
                             continue;
                         }
@@ -180,42 +184,51 @@ const Automation: React.FC = () => {
                                await deleteSonarrEpisodeFile(sonarr, episode.episodeFileId);
                             } catch (err) {
                                const episodeErrorMessage = err instanceof Error ? err.message : String(err);
-                               addLog(`ÉCHEC: Erreur lors de la suppression d'un épisode de "${item.SeriesName} - ${item.Name}": ${episodeErrorMessage}`);
+                               addLog(t('logDeletionFailedEpisode', { seriesName: item.SeriesName, name: item.Name, error: episodeErrorMessage }));
                                episodeDeletionSuccess = false;
                             }
                         }
                         if(episodeDeletionSuccess) {
-                            addLog(`SUCCÈS: ${episodesToDelete.length} épisode(s) de "${item.SeriesName} - ${item.Name}" supprimé(s) de Sonarr.`);
+                            addLog(t('logDeletionSuccessSonarr', { count: episodesToDelete.length, seriesName: item.SeriesName, name: item.Name }));
                             successCount++;
                         } else {
-                             addLog(`ÉCHEC: Un ou plusieurs épisodes de "${item.SeriesName} - ${item.Name}" n'ont pas pu être supprimés.`);
+                             addLog(t('logDeletionFailedSonarrMulti', { seriesName: item.SeriesName, name: item.Name }));
                         }
                     } else {
-                        addLog(`INFO: Série "${item.SeriesName}" non trouvée dans Sonarr.`);
+                        addLog(t('logDeletionInfoSonarrSeries', { seriesName: item.SeriesName }));
                     }
                 }
             }
         } catch(err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            setError(`Une erreur critique est survenue durant la suppression : ${errorMessage}`);
-            addLog(`ERREUR CRITIQUE: ${errorMessage}`);
+            setError(t('logDeletionCriticalError', { error: errorMessage }));
+            addLog(t('logError', { error: errorMessage }));
         }
         
-        addLog(`Suppression terminée. ${successCount} sur ${itemsToDelete.length} tâches terminées.`);
+        addLog(t('logDeletionComplete', { successCount, total: itemsToDelete.length }));
         setIsLoading(false);
         handleScan();
     };
+    
+    const getLocalizedItemType = (item: JellyfinItem) => {
+        switch(item.Type) {
+            case 'Movie': return t('typeMovie');
+            case 'Series': return t('typeSeries');
+            case 'Season': return t('typeSeason');
+            default: return item.Type;
+        }
+    }
 
     return (
         <div className="container mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-4">Automation</h1>
-            <p className="text-gray-400 mb-8">Supprime les films et séries de Radarr/Sonarr (avec les fichiers) en se basant sur leur ancienneté dans Jellyfin.</p>
+            <h1 className="text-4xl font-bold text-white mb-4">{t('automationTitle')}</h1>
+            <p className="text-gray-400 mb-8">{t('automationDescription')}</p>
 
             <div className="bg-jellyfin-dark-light p-6 rounded-lg shadow-lg mb-8">
-                <h2 className="text-xl font-semibold mb-4">Règles de rétention</h2>
+                <h2 className="text-xl font-semibold mb-4">{t('automationRetentionRules')}</h2>
                 <ul className="list-disc list-inside text-gray-300 space-y-2">
-                    <li><span className="font-bold">Films :</span> Supprimés de Radarr après {movieRetentionDays} jours.</li>
-                    <li><span className="font-bold">Saisons de séries :</span> Épisodes supprimés de Sonarr après {tvSeasonRetentionDays} jours.</li>
+                    <li><span className="font-bold">{t('typeMovie')}s:</span> {t('automationMovieRule', { days: movieRetentionDays })}</li>
+                    <li><span className="font-bold">{t('typeSeason')}s:</span> {t('automationSeasonRule', { days: tvSeasonRetentionDays })}</li>
                 </ul>
                 <button
                     onClick={handleScan}
@@ -223,7 +236,7 @@ const Automation: React.FC = () => {
                     className="mt-6 flex items-center justify-center px-6 py-3 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
                 >
                     {isLoading ? <Spinner /> : <PlayIcon />}
-                    {isLoading ? "Analyse en cours..." : "Analyser la bibliothèque Jellyfin"}
+                    {isLoading ? t('automationScanning') : t('automationScanButton')}
                 </button>
             </div>
 
@@ -231,7 +244,7 @@ const Automation: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                    <h2 className="text-2xl font-bold text-white mb-4">Éléments à supprimer ({selectedItems.size} / {deletableItems.length})</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4">{t('automationItemsToDelete', { selected: selectedItems.size, total: deletableItems.length })}</h2>
                     {deletableItems.length > 0 && (
                         <div className="flex flex-wrap gap-4 mb-4">
                             <button
@@ -240,7 +253,7 @@ const Automation: React.FC = () => {
                                 className="flex items-center justify-center px-5 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
                             >
                                 <TrashIcon />
-                                Supprimer de Radarr/Sonarr ({selectedItems.size})
+                                {t('automationDeleteButton', { count: selectedItems.size })}
                             </button>
                              <button
                                 onClick={handleExcludeAll}
@@ -248,7 +261,7 @@ const Automation: React.FC = () => {
                                 className="flex items-center justify-center px-5 py-2 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
                             >
                                 <ShieldCheckIcon />
-                                Exclure tout ({deletableItems.length})
+                                {t('automationExcludeAllButton', { count: deletableItems.length })}
                             </button>
                         </div>
                     )}
@@ -258,8 +271,8 @@ const Automation: React.FC = () => {
                                 <img src={settingsCtx?.settings?.jellyfin ? getImageUrl(settingsCtx.settings.jellyfin, item) : ''} alt={item.Name} className="w-full h-48 object-cover" />
                                 <div className="p-3">
                                     <h3 className="font-bold truncate" title={item.Name}>{item.Name}</h3>
-                                    <p className="text-sm text-gray-400">{item.Type === 'Season' ? item.SeriesName : item.Type}</p>
-                                    <p className="text-xs text-gray-500">Ajouté le: {new Date(item.DateCreated).toLocaleDateString()}</p>
+                                    <p className="text-sm text-gray-400">{item.Type === 'Season' ? item.SeriesName : getLocalizedItemType(item)}</p>
+                                    <p className="text-xs text-gray-500">{t('automationAddedOn', { date: new Date(item.DateCreated).toLocaleDateString(language) })}</p>
                                 </div>
                                 <div className={`absolute top-2 left-2 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedItems.has(item.Id) ? 'bg-jellyfin-accent border-jellyfin-accent-light' : 'bg-black/50 border-gray-400'}`}>
                                     {selectedItems.has(item.Id) && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
@@ -267,7 +280,7 @@ const Automation: React.FC = () => {
                                 <button 
                                     onClick={(e) => handleExcludeItem(e, item)}
                                     className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 hover:bg-jellyfin-accent transition-colors opacity-0 group-hover:opacity-100"
-                                    title="Exclure de la suppression"
+                                    title={t('automationExcludeTooltip')}
                                 >
                                     <SmallShieldIcon />
                                 </button>
@@ -275,16 +288,16 @@ const Automation: React.FC = () => {
                         ))}
                          {deletableItems.length === 0 && !isLoading && (
                             <div className="col-span-full text-center py-10 text-gray-500">
-                                Aucun élément à supprimer trouvé.
+                                {t('automationNoItemsFound')}
                             </div>
                         )}
                     </div>
                 </div>
                 <div className="lg:col-span-1">
-                    <h2 className="text-2xl font-bold text-white mb-4">Logs</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4">{t('automationLogs')}</h2>
                     <div className="bg-jellyfin-dark-light p-4 rounded-lg h-96 overflow-y-auto text-sm font-mono">
                         {logs.map((log, index) => (
-                            <p key={index} className={`whitespace-pre-wrap ${log.startsWith('[') ? 'text-gray-400' : ''} ${log.includes('SUCCÈS') ? 'text-green-400' : ''} ${log.includes('ÉCHEC') || log.includes('ERREUR') ? 'text-red-400' : ''} ${log.includes('INFO') ? 'text-blue-400' : ''}`}>
+                            <p key={index} className={`whitespace-pre-wrap ${log.startsWith('[') ? 'text-gray-400' : ''} ${log.includes(t('success').toUpperCase()) ? 'text-green-400' : ''} ${log.includes(t('error', {count: ''}).toUpperCase()) || log.includes('ÉCHEC') ? 'text-red-400' : ''} ${log.includes('INFO') ? 'text-blue-400' : ''}`}>
                                 {log}
                             </p>
                         ))}
@@ -295,9 +308,9 @@ const Automation: React.FC = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleDelete}
-                title="Confirmation de suppression"
+                title={t('automationModalTitle')}
             >
-                Êtes-vous sûr de vouloir supprimer définitivement {selectedItems.size} élément(s) de Radarr/Sonarr ? Les fichiers correspondants seront supprimés du disque. Cette action est irréversible.
+                {t('automationModalBody', { count: selectedItems.size })}
             </Modal>
         </div>
     );

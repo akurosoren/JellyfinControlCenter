@@ -5,9 +5,11 @@ import { testRadarrConnection } from '../services/radarrService';
 import { testSonarrConnection } from '../services/sonarrService';
 import { JellyfinUser, JccSettings } from '../types';
 import Spinner from './common/Spinner';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Settings: React.FC = () => {
     const settingsCtx = useContext(SettingsContext);
+    const { t } = useTranslation();
 
     // Jellyfin state
     const [jfUrl, setJfUrl] = useState(settingsCtx?.settings?.jellyfin?.url || '');
@@ -51,7 +53,7 @@ const Settings: React.FC = () => {
 
     const handleFetchJfUsers = async () => {
         if (!jfUrl || !jfApiKey) {
-            setError("Veuillez entrer l'URL et la clé API Jellyfin.");
+            setError(t('settingsMissingJfUrlOrKey'));
             return;
         }
         setIsLoadingJfUsers(true);
@@ -64,7 +66,7 @@ const Settings: React.FC = () => {
                 setJfUserId(fetchedUsers[0].Id);
             }
         } catch (err) {
-            setError('Impossible de récupérer les utilisateurs Jellyfin. Vérifiez l\'URL, la clé API et la connectivité réseau.');
+            setError(t('settingsFetchUsersError'));
         } finally {
             setIsLoadingJfUsers(false);
         }
@@ -115,7 +117,7 @@ const Settings: React.FC = () => {
             }
             
             settingsCtx.setSettings(newSettings);
-            setSuccessMessage('Paramètres enregistrés avec succès!');
+            setSuccessMessage(t('settingsSaveSuccess'));
             setTimeout(() => setSuccessMessage(null), 3000);
         }
     };
@@ -124,14 +126,14 @@ const Settings: React.FC = () => {
 
     return (
         <div className="container mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-8">Paramètres</h1>
+            <h1 className="text-4xl font-bold text-white mb-8">{t('settingsTitle')}</h1>
             <div className="max-w-3xl mx-auto bg-jellyfin-dark-light p-8 rounded-lg shadow-lg space-y-12">
                 
                 {/* Jellyfin Settings */}
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold text-jellyfin-accent border-b-2 border-jellyfin-accent/30 pb-2">Jellyfin (Requis)</h2>
+                    <h2 className="text-2xl font-semibold text-jellyfin-accent border-b-2 border-jellyfin-accent/30 pb-2">{t('settingsJellyfinRequired')}</h2>
                     <div>
-                        <label htmlFor="jfUrl" className="block text-sm font-medium text-gray-300 mb-2">URL du serveur</label>
+                        <label htmlFor="jfUrl" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsServerUrl')}</label>
                         <input
                             type="text" id="jfUrl" value={jfUrl} onChange={(e) => setJfUrl(e.target.value)}
                             placeholder="http://192.168.1.10:8096"
@@ -139,22 +141,22 @@ const Settings: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label htmlFor="jfApiKey" className="block text-sm font-medium text-gray-300 mb-2">Clé API</label>
+                        <label htmlFor="jfApiKey" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsApiKey')}</label>
                         <input
                             type="password" id="jfApiKey" value={jfApiKey} onChange={(e) => setJfApiKey(e.target.value)}
-                            placeholder="Votre clé API Jellyfin"
+                            placeholder={t('settingsApiKey')}
                             className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-jellyfin-accent focus:outline-none"
                         />
                     </div>
                     <button onClick={handleFetchJfUsers} disabled={isLoadingJfUsers} className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50">
                         {isLoadingJfUsers && <Spinner />}
-                        {isLoadingJfUsers ? 'Chargement...' : 'Charger les utilisateurs Jellyfin'}
+                        {isLoadingJfUsers ? t('loading') : t('settingsLoadUsers')}
                     </button>
                     {jfUsers.length > 0 && (
                         <div>
-                            <label htmlFor="jfUserId" className="block text-sm font-medium text-gray-300 mb-2">Utilisateur à utiliser</label>
+                            <label htmlFor="jfUserId" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsUserToUse')}</label>
                             <select id="jfUserId" value={jfUserId} onChange={(e) => setJfUserId(e.target.value)} className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-jellyfin-accent focus:outline-none">
-                                <option value="">-- Sélectionnez un utilisateur --</option>
+                                <option value="">{t('settingsSelectUser')}</option>
                                 {jfUsers.map(user => (<option key={user.Id} value={user.Id}>{user.Name}</option>))}
                             </select>
                         </div>
@@ -163,51 +165,51 @@ const Settings: React.FC = () => {
 
                 {/* Radarr Settings */}
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold text-yellow-400 border-b-2 border-yellow-400/30 pb-2">Radarr (Optionnel)</h2>
+                    <h2 className="text-2xl font-semibold text-yellow-400 border-b-2 border-yellow-400/30 pb-2">{t('settingsRadarrOptional')}</h2>
                     <div>
-                        <label htmlFor="radarrUrl" className="block text-sm font-medium text-gray-300 mb-2">URL du serveur</label>
+                        <label htmlFor="radarrUrl" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsServerUrl')}</label>
                         <input type="text" id="radarrUrl" value={radarrUrl} onChange={(e) => { setRadarrUrl(e.target.value); setRadarrStatus('untested'); }} placeholder="http://192.168.1.11:7878" className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label htmlFor="radarrApiKey" className="block text-sm font-medium text-gray-300 mb-2">Clé API</label>
-                        <input type="password" id="radarrApiKey" value={radarrApiKey} onChange={(e) => { setRadarrApiKey(e.target.value); setRadarrStatus('untested'); }} placeholder="Votre clé API Radarr" className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
+                        <label htmlFor="radarrApiKey" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsApiKey')}</label>
+                        <input type="password" id="radarrApiKey" value={radarrApiKey} onChange={(e) => { setRadarrApiKey(e.target.value); setRadarrStatus('untested'); }} placeholder={t('settingsApiKey')} className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-yellow-400 focus:outline-none" />
                     </div>
                      <button onClick={handleTestRadarr} disabled={isTestingRadarr || !radarrUrl || !radarrApiKey} className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 disabled:opacity-50">
                         {isTestingRadarr && <Spinner />}
-                        {radarrStatus === 'success' && '✓ Succès'}
-                        {radarrStatus === 'error' && '✗ Échec'}
-                        {radarrStatus === 'untested' && !isTestingRadarr && 'Tester la connexion'}
+                        {radarrStatus === 'success' && t('settingsTestSuccess')}
+                        {radarrStatus === 'error' && t('settingsTestFailure')}
+                        {radarrStatus === 'untested' && !isTestingRadarr && t('settingsTestConnection')}
                     </button>
                 </div>
 
                 {/* Sonarr Settings */}
                 <div className="space-y-6">
-                     <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-400/30 pb-2">Sonarr (Optionnel)</h2>
+                     <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-400/30 pb-2">{t('settingsSonarrOptional')}</h2>
                      <div>
-                        <label htmlFor="sonarrUrl" className="block text-sm font-medium text-gray-300 mb-2">URL du serveur</label>
+                        <label htmlFor="sonarrUrl" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsServerUrl')}</label>
                         <input type="text" id="sonarrUrl" value={sonarrUrl} onChange={(e) => { setSonarrUrl(e.target.value); setSonarrStatus('untested'); }} placeholder="http://192.168.1.12:8989" className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label htmlFor="sonarrApiKey" className="block text-sm font-medium text-gray-300 mb-2">Clé API</label>
-                        <input type="password" id="sonarrApiKey" value={sonarrApiKey} onChange={(e) => { setSonarrApiKey(e.target.value); setSonarrStatus('untested'); }} placeholder="Votre clé API Sonarr" className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+                        <label htmlFor="sonarrApiKey" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsApiKey')}</label>
+                        <input type="password" id="sonarrApiKey" value={sonarrApiKey} onChange={(e) => { setSonarrApiKey(e.target.value); setSonarrStatus('untested'); }} placeholder={t('settingsApiKey')} className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-400 focus:outline-none" />
                     </div>
                      <button onClick={handleTestSonarr} disabled={isTestingSonarr || !sonarrUrl || !sonarrApiKey} className="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 disabled:opacity-50">
                         {isTestingSonarr && <Spinner />}
-                        {sonarrStatus === 'success' && '✓ Succès'}
-                        {sonarrStatus === 'error' && '✗ Échec'}
-                        {sonarrStatus === 'untested' && !isTestingSonarr && 'Tester la connexion'}
+                        {sonarrStatus === 'success' && t('settingsTestSuccess')}
+                        {sonarrStatus === 'error' && t('settingsTestFailure')}
+                        {sonarrStatus === 'untested' && !isTestingSonarr && t('settingsTestConnection')}
                     </button>
                 </div>
 
                 {/* Automation Settings */}
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold text-green-400 border-b-2 border-green-400/30 pb-2">Automation</h2>
+                    <h2 className="text-2xl font-semibold text-green-400 border-b-2 border-green-400/30 pb-2">{t('settingsAutomation')}</h2>
                     <div>
-                        <label htmlFor="movieRetention" className="block text-sm font-medium text-gray-300 mb-2">Rétention des films (jours)</label>
+                        <label htmlFor="movieRetention" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsMovieRetention')}</label>
                         <input type="number" id="movieRetention" value={movieRetentionDays} onChange={(e) => setMovieRetentionDays(Number(e.target.value))} className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label htmlFor="tvRetention" className="block text-sm font-medium text-gray-300 mb-2">Rétention des saisons de séries (jours)</label>
+                        <label htmlFor="tvRetention" className="block text-sm font-medium text-gray-300 mb-2">{t('settingsTvSeasonRetention')}</label>
                         <input type="number" id="tvRetention" value={tvSeasonRetentionDays} onChange={(e) => setTvSeasonRetentionDays(Number(e.target.value))} className="w-full bg-jellyfin-light border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none" />
                     </div>
                 </div>
@@ -220,7 +222,7 @@ const Settings: React.FC = () => {
                         disabled={isSaveDisabled}
                         className="w-full px-6 py-3 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
                     >
-                        Enregistrer les Paramètres
+                        {t('settingsSaveButton')}
                     </button>
                     {successMessage && <p className="text-green-400 text-sm text-center mt-2">{successMessage}</p>}
                 </div>

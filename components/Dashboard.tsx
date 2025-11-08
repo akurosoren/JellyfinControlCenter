@@ -5,6 +5,7 @@ import { testRadarrConnection } from '../services/radarrService';
 import { testSonarrConnection } from '../services/sonarrService';
 import { JellyfinItem } from '../types';
 import Spinner from './common/Spinner';
+import { useTranslation } from '../hooks/useTranslation';
 
 type ServiceStatus = 'online' | 'offline' | 'unconfigured';
 interface Statuses {
@@ -14,15 +15,16 @@ interface Statuses {
 }
 
 const StatusIndicator: React.FC<{ status: ServiceStatus }> = ({ status }) => {
+    const { t } = useTranslation();
     const colorMap: Record<ServiceStatus, string> = {
         online: 'bg-green-500',
         offline: 'bg-red-500',
         unconfigured: 'bg-gray-500',
     };
     const textMap: Record<ServiceStatus, string> = {
-        online: 'En ligne',
-        offline: 'Hors ligne',
-        unconfigured: 'Non configuré',
+        online: t('statusOnline'),
+        offline: t('statusOffline'),
+        unconfigured: t('statusUnconfigured'),
     };
 
     return (
@@ -45,6 +47,7 @@ const MediaCard: React.FC<{ item: JellyfinItem, imageUrl: string }> = ({ item, i
 
 const Dashboard: React.FC = () => {
     const settingsCtx = useContext(SettingsContext);
+    const { t } = useTranslation();
     const [statuses, setStatuses] = useState<Statuses>({ jellyfin: 'unconfigured', radarr: 'unconfigured', sonarr: 'unconfigured' });
     const [latestMovies, setLatestMovies] = useState<JellyfinItem[]>([]);
     const [latestEpisodes, setLatestEpisodes] = useState<JellyfinItem[]>([]);
@@ -102,7 +105,7 @@ const Dashboard: React.FC = () => {
         return (
             <div className="flex justify-center items-center h-full">
                 <Spinner />
-                <span className="ml-4 text-xl">Chargement du tableau de bord...</span>
+                <span className="ml-4 text-xl">{t('dashboardLoading')}</span>
             </div>
         );
     }
@@ -110,9 +113,9 @@ const Dashboard: React.FC = () => {
     if (statuses.jellyfin === 'unconfigured') {
          return (
              <div className="bg-jellyfin-dark-light p-8 rounded-lg shadow-lg">
-                <h2 className="text-2xl font-semibold text-jellyfin-accent mb-4">Bienvenue sur le Jellyfin Control Center</h2>
+                <h2 className="text-2xl font-semibold text-jellyfin-accent mb-4">{t('dashboardWelcomeTitle')}</h2>
                 <p className="text-gray-300">
-                    Utilisez le menu sur la gauche pour naviguer. Commencez par configurer votre serveur Jellyfin dans les paramètres pour voir les informations ici.
+                    {t('dashboardWelcomeMessage')}
                 </p>
             </div>
          );
@@ -120,22 +123,22 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="container mx-auto space-y-8">
-            <h1 className="text-4xl font-bold text-white">Tableau de bord</h1>
+            <h1 className="text-4xl font-bold text-white">{t('dashboardTitle')}</h1>
 
             {/* Server Status */}
             <div className="bg-jellyfin-dark-light p-6 rounded-lg shadow-lg">
-                <h2 className="text-2xl font-semibold text-white mb-4">État des services</h2>
+                <h2 className="text-2xl font-semibold text-white mb-4">{t('dashboardServicesStatus')}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="bg-jellyfin-light p-4 rounded-lg">
-                        <h3 className="font-bold text-lg mb-2 text-jellyfin-accent">Jellyfin</h3>
+                        <h3 className="font-bold text-lg mb-2 text-jellyfin-accent">{t('jellyfin')}</h3>
                         <StatusIndicator status={statuses.jellyfin} />
                     </div>
                     <div className="bg-jellyfin-light p-4 rounded-lg">
-                        <h3 className="font-bold text-lg mb-2 text-yellow-400">Radarr</h3>
+                        <h3 className="font-bold text-lg mb-2 text-yellow-400">{t('radarr')}</h3>
                         <StatusIndicator status={statuses.radarr} />
                     </div>
                     <div className="bg-jellyfin-light p-4 rounded-lg">
-                        <h3 className="font-bold text-lg mb-2 text-blue-400">Sonarr</h3>
+                        <h3 className="font-bold text-lg mb-2 text-blue-400">{t('sonarr')}</h3>
                         <StatusIndicator status={statuses.sonarr} />
                     </div>
                 </div>
@@ -144,7 +147,7 @@ const Dashboard: React.FC = () => {
             {/* Recently Added Movies */}
             {latestMovies.length > 0 && (
                 <div>
-                    <h2 className="text-2xl font-semibold text-white mb-4">Derniers films ajoutés</h2>
+                    <h2 className="text-2xl font-semibold text-white mb-4">{t('dashboardLatestMovies')}</h2>
                     <div className="flex space-x-4 overflow-x-auto pb-4">
                         {latestMovies.map(item => (
                             <MediaCard key={item.Id} item={item} imageUrl={getImageUrl(settingsCtx!.settings!.jellyfin, item)} />
@@ -156,7 +159,7 @@ const Dashboard: React.FC = () => {
             {/* Recently Added Episodes */}
             {latestEpisodes.length > 0 && (
                 <div>
-                    <h2 className="text-2xl font-semibold text-white mb-4">Derniers épisodes ajoutés</h2>
+                    <h2 className="text-2xl font-semibold text-white mb-4">{t('dashboardLatestEpisodes')}</h2>
                     <div className="flex space-x-4 overflow-x-auto pb-4">
                         {latestEpisodes.map(item => (
                             <MediaCard key={item.Id} item={item} imageUrl={getImageUrl(settingsCtx!.settings!.jellyfin, item)} />
@@ -165,7 +168,7 @@ const Dashboard: React.FC = () => {
                 </div>
             )}
             
-            {statuses.jellyfin === 'offline' && <p className="text-red-400">Impossible de se connecter à Jellyfin. Veuillez vérifier vos paramètres.</p>}
+            {statuses.jellyfin === 'offline' && <p className="text-red-400">{t('dashboardJellyfinError')}</p>}
 
         </div>
     );

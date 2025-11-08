@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Login: React.FC = () => {
     const { isPasswordSet, login, createPassword } = useAuth();
+    const { t } = useTranslation();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -11,7 +13,7 @@ const Login: React.FC = () => {
         e.preventDefault();
         setError('');
         if (!login(password)) {
-            setError('Mot de passe incorrect.');
+            setError(t('loginIncorrectPassword'));
         }
     };
     
@@ -19,11 +21,11 @@ const Login: React.FC = () => {
         e.preventDefault();
         setError('');
         if (password !== confirmPassword) {
-            setError('Les mots de passe ne correspondent pas.');
+            setError(t('loginPasswordsMismatch'));
             return;
         }
         if (password.length < 4) {
-            setError('Le mot de passe doit contenir au moins 4 caractères.');
+            setError(t('loginPasswordTooShort'));
             return;
         }
         createPassword(password);
@@ -32,7 +34,7 @@ const Login: React.FC = () => {
     const renderLoginForm = () => (
         <form onSubmit={handleLogin} className="space-y-6">
             <div>
-                <label htmlFor="password-login" className="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                <label htmlFor="password-login" className="block text-sm font-medium text-gray-300 mb-2">{t('loginPassword')}</label>
                 <input
                     type="password"
                     id="password-login"
@@ -43,7 +45,7 @@ const Login: React.FC = () => {
                 />
             </div>
             <button type="submit" className="w-full px-6 py-3 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors">
-                Se connecter
+                {t('loginButton')}
             </button>
         </form>
     );
@@ -51,7 +53,7 @@ const Login: React.FC = () => {
     const renderCreatePasswordForm = () => (
         <form onSubmit={handleCreatePassword} className="space-y-6">
              <div>
-                <label htmlFor="password-create" className="block text-sm font-medium text-gray-300 mb-2">Créer un mot de passe</label>
+                <label htmlFor="password-create" className="block text-sm font-medium text-gray-300 mb-2">{t('loginCreatePassword')}</label>
                 <input
                     type="password"
                     id="password-create"
@@ -62,7 +64,7 @@ const Login: React.FC = () => {
                 />
             </div>
             <div>
-                <label htmlFor="password-confirm" className="block text-sm font-medium text-gray-300 mb-2">Confirmer le mot de passe</label>
+                <label htmlFor="password-confirm" className="block text-sm font-medium text-gray-300 mb-2">{t('loginConfirmPassword')}</label>
                 <input
                     type="password"
                     id="password-confirm"
@@ -73,7 +75,7 @@ const Login: React.FC = () => {
                 />
             </div>
             <button type="submit" className="w-full px-6 py-3 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors">
-                Définir le mot de passe et entrer
+                {t('loginSetPasswordAndEnter')}
             </button>
         </form>
     );
@@ -87,12 +89,12 @@ const Login: React.FC = () => {
                     <h1 className="text-3xl font-bold ml-4 text-white">Jellyfin CC</h1>
                 </div>
                  <p className="text-center text-gray-400 mb-6">
-                    {isPasswordSet ? "Veuillez vous connecter pour continuer." : "Bienvenue ! Veuillez créer un mot de passe administrateur."}
+                    {isPasswordSet ? t('loginPrompt') : t('loginWelcome')}
                 </p>
                 {isPasswordSet ? renderLoginForm() : renderCreatePasswordForm()}
                 {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
                 <p className="text-xs text-gray-500 text-center mt-6">
-                    Le mot de passe est stocké localement dans votre navigateur.
+                    {t('loginLocalStorageNote')}
                 </p>
             </div>
         </div>

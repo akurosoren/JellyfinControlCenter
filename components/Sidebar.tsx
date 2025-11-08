@@ -1,6 +1,8 @@
 import React from 'react';
 import { DashboardIcon, AutomationIcon, SettingsIcon, ShieldIcon, LogoutIcon } from '../constants';
 import { useAuth } from '../auth/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 type View = 'dashboard' | 'automation' | 'settings' | 'exclusions';
 
@@ -11,11 +13,14 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
     const { logout } = useAuth();
+    const { language, setLanguage } = useLanguage();
+    const { t } = useTranslation();
+
     const navItems = [
-        { id: 'dashboard', icon: <DashboardIcon />, label: 'Tableau de bord' },
-        { id: 'automation', icon: <AutomationIcon />, label: 'Automation' },
-        { id: 'exclusions', icon: <ShieldIcon />, label: 'Exclusions' },
-        { id: 'settings', icon: <SettingsIcon />, label: 'Paramètres' },
+        { id: 'dashboard', icon: <DashboardIcon />, label: t('sidebarDashboard') },
+        { id: 'automation', icon: <AutomationIcon />, label: t('sidebarAutomation') },
+        { id: 'exclusions', icon: <ShieldIcon />, label: t('sidebarExclusions') },
+        { id: 'settings', icon: <SettingsIcon />, label: t('sidebarSettings') },
     ];
 
     return (
@@ -44,12 +49,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
                 </ul>
             </nav>
             <div className="mt-auto">
+                 <div className="hidden md:flex justify-center space-x-2 my-4">
+                    <button onClick={() => setLanguage('fr')} className={`px-3 py-1 text-sm font-bold rounded-md ${language === 'fr' ? 'bg-jellyfin-accent text-white' : 'bg-jellyfin-light text-gray-400 hover:text-white'}`}>FR</button>
+                    <button onClick={() => setLanguage('en')} className={`px-3 py-1 text-sm font-bold rounded-md ${language === 'en' ? 'bg-jellyfin-accent text-white' : 'bg-jellyfin-light text-gray-400 hover:text-white'}`}>EN</button>
+                </div>
                 <button
                     onClick={logout}
                     className={'w-full flex items-center p-3 my-2 rounded-lg transition-colors text-gray-400 hover:bg-jellyfin-light hover:text-white'}
                 >
                     <LogoutIcon />
-                    <span className="hidden md:block ml-4 font-semibold">Déconnexion</span>
+                    <span className="hidden md:block ml-4 font-semibold">{t('sidebarLogout')}</span>
                 </button>
             </div>
         </aside>

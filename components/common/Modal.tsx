@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, children }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -24,13 +26,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, childr
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
           >
-            Annuler
+            {t('cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
           >
-            Confirmer
+            {t('confirm')}
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, createContext, useMemo } from 'react';
+import React, { useState, createContext, useMemo, useEffect } from 'react';
 import useLocalStorage from './hooks/useLocalStorage';
 import { JccSettings } from './types';
 import Sidebar from './components/Sidebar';
@@ -8,6 +8,8 @@ import Settings from './components/Settings';
 import Exclusions from './components/Exclusions';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import Login from './auth/Login';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { useTranslation } from './hooks/useTranslation';
 
 type View = 'dashboard' | 'automation' | 'settings' | 'exclusions';
 
@@ -21,6 +23,12 @@ export const SettingsContext = createContext<SettingsContextType | null>(null);
 const MainApp: React.FC = () => {
     const [settings, setSettings] = useLocalStorage<JccSettings | null>('jcc-settings', null);
     const [view, setView] = useState<View>('dashboard');
+    const { language } = useLanguage();
+    const { t } = useTranslation();
+
+    useEffect(() => {
+        document.documentElement.lang = language;
+    }, [language]);
 
     const contextValue = useMemo(() => ({ settings, setSettings }), [settings, setSettings]);
 
@@ -28,13 +36,13 @@ const MainApp: React.FC = () => {
         if (!settings?.jellyfin?.url && view !== 'settings') {
             return (
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                    <h2 className="text-2xl font-bold mb-4">Bienvenue !</h2>
-                    <p className="text-gray-400 mb-6">Pour commencer, veuillez configurer votre connexion à Jellyfin dans les paramètres.</p>
+                    <h2 className="text-2xl font-bold mb-4">{t('appWelcomeTitle')}</h2>
+                    <p className="text-gray-400 mb-6">{t('appWelcomeMessage')}</p>
                     <button
                         onClick={() => setView('settings')}
                         className="px-6 py-2 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold transition-colors"
                     >
-                        Aller aux Paramètres
+                        {t('appWelcomeButton')}
                     </button>
                 </div>
             )
@@ -73,9 +81,11 @@ const AppWithAuth: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <AuthProvider>
-            <AppWithAuth />
-        </AuthProvider>
+        <LanguageProvider>
+            <AuthProvider>
+                <AppWithAuth />
+            </AuthProvider>
+        </LanguageProvider>
     );
 };
 
