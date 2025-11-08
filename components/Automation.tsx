@@ -221,10 +221,10 @@ const Automation: React.FC = () => {
 
     return (
         <div className="container mx-auto">
-            <h1 className="text-4xl font-bold text-white mb-4">{t('automationTitle')}</h1>
+            <h1 className="text-4xl font-bold text-white mb-4 title-glow">{t('automationTitle')}</h1>
             <p className="text-gray-400 mb-8">{t('automationDescription')}</p>
 
-            <div className="bg-jellyfin-dark-light p-6 rounded-lg shadow-lg mb-8">
+            <div className="bg-jellyfin-dark-light/70 backdrop-blur-sm border border-jellyfin-light/20 p-6 rounded-lg shadow-lg mb-8">
                 <h2 className="text-xl font-semibold mb-4">{t('automationRetentionRules')}</h2>
                 <ul className="list-disc list-inside text-gray-300 space-y-2">
                     <li><span className="font-bold">{t('typeMovie')}s:</span> {t('automationMovieRule', { days: movieRetentionDays })}</li>
@@ -233,7 +233,7 @@ const Automation: React.FC = () => {
                 <button
                     onClick={handleScan}
                     disabled={isLoading}
-                    className="mt-6 flex items-center justify-center px-6 py-3 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+                    className="mt-6 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-jellyfin-accent to-jellyfin-accent-light text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(170,0,255,0.5)] disabled:bg-gray-500 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
                 >
                     {isLoading ? <Spinner /> : <PlayIcon />}
                     {isLoading ? t('automationScanning') : t('automationScanButton')}
@@ -250,7 +250,7 @@ const Automation: React.FC = () => {
                             <button
                                 onClick={() => setIsModalOpen(true)}
                                 disabled={isLoading || selectedItems.size === 0}
-                                className="flex items-center justify-center px-5 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+                                className="flex items-center justify-center px-5 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] disabled:bg-gray-500 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
                             >
                                 <TrashIcon />
                                 {t('automationDeleteButton', { count: selectedItems.size })}
@@ -258,7 +258,7 @@ const Automation: React.FC = () => {
                              <button
                                 onClick={handleExcludeAll}
                                 disabled={isLoading || deletableItems.length === 0}
-                                className="flex items-center justify-center px-5 py-2 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold text-white transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+                                className="flex items-center justify-center px-5 py-2 bg-gradient-to-r from-jellyfin-accent to-jellyfin-accent-light text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(170,0,255,0.5)] disabled:bg-gray-500 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
                             >
                                 <ShieldCheckIcon />
                                 {t('automationExcludeAllButton', { count: deletableItems.length })}
@@ -267,14 +267,14 @@ const Automation: React.FC = () => {
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-2">
                         {deletableItems.map(item => (
-                            <div key={item.Id} className="bg-jellyfin-light rounded-lg overflow-hidden shadow-lg relative cursor-pointer group" onClick={() => handleToggleSelection(item.Id)}>
+                            <div key={item.Id} className="bg-jellyfin-dark-light/70 backdrop-blur-sm border border-jellyfin-light/20 rounded-lg overflow-hidden shadow-lg relative cursor-pointer group transition-all duration-300 hover:shadow-[0_0_20px_rgba(170,0,255,0.3)] hover:border-jellyfin-accent/50" onClick={() => handleToggleSelection(item.Id)}>
                                 <img src={settingsCtx?.settings?.jellyfin ? getImageUrl(settingsCtx.settings.jellyfin, item) : ''} alt={item.Name} className="w-full h-48 object-cover" />
                                 <div className="p-3">
                                     <h3 className="font-bold truncate" title={item.Name}>{item.Name}</h3>
                                     <p className="text-sm text-gray-400">{item.Type === 'Season' ? item.SeriesName : getLocalizedItemType(item)}</p>
                                     <p className="text-xs text-gray-500">{t('automationAddedOn', { date: new Date(item.DateCreated).toLocaleDateString(language) })}</p>
                                 </div>
-                                <div className={`absolute top-2 left-2 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedItems.has(item.Id) ? 'bg-jellyfin-accent border-jellyfin-accent-light' : 'bg-black/50 border-gray-400'}`}>
+                                <div className={`absolute top-2 left-2 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${selectedItems.has(item.Id) ? 'bg-jellyfin-accent border-jellyfin-accent-light shadow-[0_0_10px_rgba(170,0,255,0.7)]' : 'bg-black/50 border-gray-400'}`}>
                                     {selectedItems.has(item.Id) && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
                                 </div>
                                 <button 
@@ -295,7 +295,7 @@ const Automation: React.FC = () => {
                 </div>
                 <div className="lg:col-span-1">
                     <h2 className="text-2xl font-bold text-white mb-4">{t('automationLogs')}</h2>
-                    <div className="bg-jellyfin-dark-light p-4 rounded-lg h-96 overflow-y-auto text-sm font-mono">
+                    <div className="bg-jellyfin-dark-light/70 backdrop-blur-sm border border-jellyfin-light/20 p-4 rounded-lg h-96 overflow-y-auto text-sm font-mono">
                         {logs.map((log, index) => (
                             <p key={index} className={`whitespace-pre-wrap ${log.startsWith('[') ? 'text-gray-400' : ''} ${log.includes(t('success').toUpperCase()) ? 'text-green-400' : ''} ${log.includes(t('error', {count: ''}).toUpperCase()) || log.includes('ÉCHEC') ? 'text-red-400' : ''} ${log.includes('INFO') ? 'text-blue-400' : ''}`}>
                                 {log}

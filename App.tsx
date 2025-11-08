@@ -36,11 +36,11 @@ const MainApp: React.FC = () => {
         if (!settings?.jellyfin?.url && view !== 'settings') {
             return (
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                    <h2 className="text-2xl font-bold mb-4">{t('appWelcomeTitle')}</h2>
+                    <h2 className="text-2xl font-bold mb-4 title-glow">{t('appWelcomeTitle')}</h2>
                     <p className="text-gray-400 mb-6">{t('appWelcomeMessage')}</p>
                     <button
                         onClick={() => setView('settings')}
-                        className="px-6 py-2 bg-jellyfin-accent hover:bg-jellyfin-accent-light rounded-lg font-semibold transition-colors"
+                        className="px-6 py-2 bg-gradient-to-r from-jellyfin-accent to-jellyfin-accent-light text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(170,0,255,0.5)]"
                     >
                         {t('appWelcomeButton')}
                     </button>
@@ -64,9 +64,9 @@ const MainApp: React.FC = () => {
 
     return (
         <SettingsContext.Provider value={contextValue}>
-            <div className="flex h-screen bg-jellyfin-dark text-gray-200 font-sans">
+            <div className="flex h-screen bg-transparent text-gray-200 font-sans">
                 <Sidebar currentView={view} setView={setView} />
-                <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
+                <main className="flex-1 p-4 sm:p-8 overflow-y-auto transition-opacity duration-500">
                     {renderView()}
                 </main>
             </div>

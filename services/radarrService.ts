@@ -27,6 +27,9 @@ async function apiFetch(endpoint: string, settings: RadarrSettings, options: Req
     return response.json();
   } catch (error) {
     console.error(`Radarr API call to ${endpoint} failed:`, error);
+    if (error instanceof TypeError) {
+        throw new Error("Network Error: Could not connect to the Radarr server. This may be a CORS issue, which typically needs to be configured in your reverse proxy (like Nginx or Caddy). Please ensure your reverse proxy is set up to add the necessary CORS headers for this application's domain.");
+    }
     throw error;
   }
 }

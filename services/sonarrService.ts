@@ -1,4 +1,4 @@
-import { SonarrSettings, SonarrSeries, SonarrEpisode } from '../types';
+import { SonarrSettings, SonarrSeries, SonarrEpisode, SonarrCalendarItem } from '../types';
 
 async function apiFetch(endpoint: string, settings: SonarrSettings, options: RequestInit = {}) {
   const { url, apiKey } = settings;
@@ -27,6 +27,9 @@ async function apiFetch(endpoint: string, settings: SonarrSettings, options: Req
     return response.json();
   } catch (error) {
     console.error(`Sonarr API call to ${endpoint} failed:`, error);
+    if (error instanceof TypeError) {
+        throw new Error("Network Error: Could not connect to the Sonarr server. This may be a CORS issue, which typically needs to be configured in your reverse proxy (like Nginx or Caddy). Please ensure your reverse proxy is set up to add the necessary CORS headers for this application's domain.");
+    }
     throw error;
   }
 }
@@ -46,3 +49,9 @@ export const deleteSonarrEpisodeFile = async (settings: SonarrSettings, episodeF
 export const testSonarrConnection = async (settings: SonarrSettings): Promise<{ appName: string }> => {
     return apiFetch('/api/v3/system/status', settings);
 }
+
+export const getSonarrCalendar = async (settings: SonarrSettings, start: Date, end: Date): Promise<SonarrCalendarItem[]> => {
+    const startDate = start.toISOString().split('T')[0];
+    const endDate = end.toISOString().split('T')[0];
+    return apiFetch(`/api/v3/calendar?start=${startDate}&end=${endDate}&includeSeries=true`, settings);
+};

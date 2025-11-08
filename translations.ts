@@ -49,7 +49,8 @@ const translationsData = {
     dashboardTitle: "Tableau de bord",
     dashboardServicesStatus: "État des services",
     dashboardLatestMovies: "Derniers films ajoutés",
-    dashboardLatestEpisodes: "Derniers épisodes ajoutés",
+    dashboardLatestSeries: "Dernières séries ajoutées",
+    dashboardUpcoming: "Prochainement",
     dashboardJellyfinError: "Impossible de se connecter à Jellyfin. Veuillez vérifier vos paramètres.",
 
     // Settings
@@ -174,7 +175,8 @@ const translationsData = {
     dashboardTitle: "Dashboard",
     dashboardServicesStatus: "Services Status",
     dashboardLatestMovies: "Recently Added Movies",
-    dashboardLatestEpisodes: "Recently Added Episodes",
+    dashboardLatestSeries: "Recently Added Series",
+    dashboardUpcoming: "Upcoming",
     dashboardJellyfinError: "Could not connect to Jellyfin. Please check your settings.",
 
     // Settings

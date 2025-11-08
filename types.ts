@@ -64,6 +64,7 @@ export interface SonarrSeries {
     title: string;
     tvdbId: number;
     path: string;
+    images: { coverType: string, url: string }[];
 }
 
 export interface SonarrEpisode {
@@ -74,4 +75,18 @@ export interface SonarrEpisode {
     title: string;
     hasFile: boolean;
     episodeFileId: number;
+}
+
+export interface SonarrCalendarItem {
+    seriesId: number;
+    tvdbId: number;
+    title: string;
+    seasonNumber: number;
+    episodeNumber: number;
+    airDateUtc: string;
+    series: {
+        title: string;
+        tvdbId: number;
+        images: { coverType: string, remoteUrl: string }[];
+    }
 }

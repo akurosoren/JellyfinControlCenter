@@ -5,11 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jellyfin Control Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
             colors: {
               'jellyfin-dark': '#101010',
               'jellyfin-dark-light': '#1e1e1e',
@@ -21,18 +27,24 @@
         }
       }
     </script>
+    <style>
+      .title-glow {
+        text-shadow: 0 0 15px rgba(170, 0, 255, 0.4);
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lodash.isequal": "https://aistudiocdn.com/lodash.isequal@^4.5.0"
   }
 }
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-jellyfin-dark">
+  <body class="bg-jellyfin-dark bg-gradient-to-br from-jellyfin-dark via-jellyfin-dark to-[#18111f]">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
